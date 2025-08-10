@@ -13,7 +13,7 @@ document.getElementById('fetch-data').addEventListener('click', function(){
     })
     .catch(error => {
         console.error('Fetch error:', error);
-        errorMessage(error)
+        errorMessage("Error fetching data, please try again")
     })
 })
 
@@ -29,6 +29,26 @@ function displayData(title, body){
 
 function errorMessage(msg){
     let h1 = document.createElement('h1')
-    hi.innerText = msg
+    h1.innerText = msg
     displayDataDiv.appendChild(h1)
 }
+
+document.getElementById('XHR-data').addEventListener('click', function() {
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', 'https://jsonplaceholder.typicode.com/posts/2', true);
+
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) { 
+            if (xhr.status === 200) { 
+                const data = JSON.parse(xhr.responseText);
+                console.log(data);
+                displayData(data.title, data.body);
+            } else {
+                console.error('Error fetching data:', xhr.statusText);
+                errorMessage("Error fetching data, please try again!")
+            }
+        }
+    };
+
+    xhr.send();
+});
