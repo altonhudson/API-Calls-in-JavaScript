@@ -3,6 +3,7 @@ document.getElementById('fetch-data').addEventListener('click', function () {
     fetch("https://jsonplaceholder.typicode.com/posts/1")
         .then(response => {
             if (!response.ok) {
+                handleError('server', `Status: ${response.status}`)              
                 throw new Error(`HTTP error! Status: ${response.status}`)
             }
             return response.json()
@@ -13,7 +14,8 @@ document.getElementById('fetch-data').addEventListener('click', function () {
         })
         .catch(error => {
             console.error('Fetch error:', error);
-            errorMessage("Error fetching data, please try again")
+            handleError('Network', '')
+
         })
 })
 
@@ -34,6 +36,8 @@ function errorMessage(msg) {
     displayDataDiv.appendChild(h1)
 }
 
+
+
 document.getElementById('XHR-data').addEventListener('click', function () {
     const xhr = new XMLHttpRequest();
     xhr.open('GET', 'https://jsonplaceholder.typicode.com/posts/2', true);
@@ -45,11 +49,16 @@ document.getElementById('XHR-data').addEventListener('click', function () {
                 console.log(data);
                 displayData(data.title, data.body);
             } else {
+                handleError('server', `Status: 404 not found`)              
                 console.error('Error fetching data:', xhr.statusText);
-                errorMessage("Error fetching data, please try again!")
+
             }
         }
     };
+ 
+    xhr.onerror = function ()  {
+        handleError('network', '')
+    };    
 
     xhr.send();
 });
@@ -77,6 +86,7 @@ document.getElementById('btn-post').addEventListener('click', function (e) {
     })
         .then(response => {
             if (!response.ok) {
+                handleError('server', `Status: ${response.status}`)
                 throw new Error(`HTTP error! Status: ${response.status}`)
             }
             return response.json();
@@ -87,14 +97,14 @@ document.getElementById('btn-post').addEventListener('click', function (e) {
         })
         .catch(error => {
             console.error('Error:', error);
-            errorMessage('Error: Message was not posted, please try again.')
+            handleError('Network', '')
         })
 
 });
 
 
 function displayPutData(title, body, id) {
-
+    displayDataDiv.classList.toggle('show')
     let h1 = document.createElement('h1')
     h1.innerText = title
     let dataBody = document.createElement('p')
@@ -110,7 +120,7 @@ let putTitle = document.querySelector('.put-title');
 let putBody = document.querySelector('.put-body');
 document.getElementById('btn-put').addEventListener('click', function (e) {
     e.preventDefault();
-
+    
     let id = document.querySelector('.put-id').value;
 
     const xhr = new XMLHttpRequest();
@@ -122,9 +132,18 @@ document.getElementById('btn-put').addEventListener('click', function (e) {
             const updatePost = JSON.parse(xhr.responseText);
             console.log('Success:', updatePost);
             displayPutData(updatePost.title, updatePost.body, id)
+            let del = document.createElement('button')
+            del.setAttribute('id','del-btn');
+            del.innerText = "Delete Post"
+            displayDataDiv.appendChild(del)
         } else {
             errorMessage("Error updating post, please try again!");
-        }
+            handleError('server', `Status ${xhr.status}`); 
+        };
+    }
+
+    xhr.onerror = function ()  {
+        handleError('network', '')
     };
 
     const data = JSON.stringify({
@@ -133,4 +152,54 @@ document.getElementById('btn-put').addEventListener('click', function (e) {
     });
 
     xhr.send(data);
+});
+
+let h4 = document.createElement('h4')
+
+function handleError(type, errDetail) {
+    displayDataDiv.appendChild(h4)
+    switch (type) {
+        case 'network':  h4.innerText = "Network Error: Please check your internet connection"
+        break;
+        case "input" : h4.innerText = "Invalid Input: " + errDetail;
+        break
+        case "server": h4.innerText = "Service Error: " + errDetail;
+        break
+        default:
+            h4.innerText = "An unkown error occured! Please try again."
+    }
+}
+
+function deletePost(id){
+    
+    fetch(`https://jsonplaceholder.typicode.com/posts/${id}`, {
+        method: 'DELETE',
+        
+    })
+    .then(response => {
+        if(response.ok) {
+            console.log('Post deleted succesfully');
+        } else {
+            console.error('Failed to delete post:', response.status);
+            handleError('server', `Status: ${response.status}`)
+
+
+        }
+    })
+    .catch(error => {
+        console.error('Network error: ', error)
+        handleError('network', `Status: ${error}`)
+        
+    })
+}
+
+displayDataDiv.addEventListener('click', function(e) {
+ let id = document.querySelector('.put-id').value;
+
+  if (e.target.id === 'del-btn') {
+    deletePost(id);
+    displayDataDiv.classList.toggle('show')
+    displayDataDiv.classList.toggle('hidden')
+
+  }
 });
