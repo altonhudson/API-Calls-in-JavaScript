@@ -19,6 +19,7 @@ document.getElementById('fetch-data').addEventListener('click', function () {
 
 let displayDataDiv = document.querySelector(".display-data")
 function displayData(title, body) {
+
     let h1 = document.createElement('h1')
     h1.innerText = title
     let dataBody = document.createElement('p')
@@ -88,5 +89,48 @@ document.getElementById('btn-post').addEventListener('click', function (e) {
             console.error('Error:', error);
             errorMessage('Error: Message was not posted, please try again.')
         })
-        
+
+});
+
+
+function displayPutData(title, body, id) {
+
+    let h1 = document.createElement('h1')
+    h1.innerText = title
+    let dataBody = document.createElement('p')
+    dataBody.innerText = body
+    let h3 = document.createElement('h3')
+    h3.innerText = id
+    displayDataDiv.appendChild(h3)
+    displayDataDiv.appendChild(h1)
+    displayDataDiv.appendChild(dataBody)
+}
+
+let putTitle = document.querySelector('.put-title');
+let putBody = document.querySelector('.put-body');
+document.getElementById('btn-put').addEventListener('click', function (e) {
+    e.preventDefault();
+
+    let id = document.querySelector('.put-id').value;
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('PUT', `https://jsonplaceholder.typicode.com/posts/${id}`, true);
+    xhr.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
+
+    xhr.onload = function () {
+        if (xhr.status >= 200 && xhr.status < 300) {
+            const updatePost = JSON.parse(xhr.responseText);
+            console.log('Success:', updatePost);
+            displayPutData(updatePost.title, updatePost.body, id)
+        } else {
+            errorMessage("Error updating post, please try again!");
+        }
+    };
+
+    const data = JSON.stringify({
+        title: putTitle.value,
+        body: putBody.value
     });
+
+    xhr.send(data);
+});
